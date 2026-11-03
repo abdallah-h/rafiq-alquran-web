@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- رفيق القرآن: an open Mushaf on a rahle (Quran stand), inside a Rub el Hizb star (۞). Full-bleed for the
+       adaptive icon: everything that matters sits inside the central safe circle (r ≈ 170). -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#17926B"/>
+      <stop offset="0.55" stop-color="#0F6B4F"/>
+      <stop offset="1" stop-color="#0A3F30"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F1D58C"/>
+      <stop offset="1" stop-color="#C99A3B"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFBF0"/>
+      <stop offset="1" stop-color="#F3E6C4"/>
+    </linearGradient>
+  </defs>
+  
+
+  <!-- Rub el Hizb: two squares, one turned 45° -->
+  <g fill="none" stroke="url(#gold)" stroke-width="7" stroke-linejoin="round" opacity="0.9">
+    <rect x="137" y="137" width="238" height="238" rx="6"/>
+    <rect x="137" y="137" width="238" height="238" rx="6" transform="rotate(45 256 256)"/>
+  </g>
+  <circle cx="256" cy="256" r="112" fill="#0A4A37" opacity="0.6"/>
+
+  <!-- rahle (folding X stand) -->
+  <g stroke="url(#gold)" stroke-width="12" stroke-linecap="round">
+    <line x1="196" y1="288" x2="318" y2="352"/>
+    <line x1="316" y1="288" x2="194" y2="352"/>
+  </g>
+
+  <!-- open Mushaf -->
+  <g stroke="#C99A3B" stroke-width="4" stroke-linejoin="round">
+    <path d="M256 300 C 226 284 192 280 162 288 L 162 206 C 192 197 228 200 256 218 Z" fill="url(#page)"/>
+    <path d="M256 300 C 286 284 320 280 350 288 L 350 206 C 320 197 284 200 256 218 Z" fill="url(#page)"/>
+  </g>
+  <!-- cover edges -->
+  <path d="M154 294 C 190 284 228 288 256 306 C 284 288 322 284 358 294" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round"/>
+  <!-- lines of text -->
+  <g stroke="#B8893A" stroke-width="3.2" stroke-linecap="round" opacity="0.8">
+    <path d="M178 224 C 200 219 222 220 242 228" fill="none"/>
+    <path d="M178 241 C 200 236 222 237 242 245" fill="none"/>
+    <path d="M178 258 C 200 253 222 254 242 262" fill="none"/>
+    <path d="M334 224 C 312 219 290 220 270 228" fill="none"/>
+    <path d="M334 241 C 312 236 290 237 270 245" fill="none"/>
+    <path d="M334 258 C 312 253 290 254 270 262" fill="none"/>
+  </g>
+  <!-- small star above the book -->
+  <path d="M256 150 l7 15 16 2 -12 11 3 16 -14 -8 -14 8 3 -16 -12 -11 16 -2z" fill="url(#gold)"/>
+</svg>

@@ -1,0 +1,129 @@
+/* ============================================================
+   Hifz section on the shared رفيق القرآن design (= the Tafsir section's design system):
+   cream paper + deep green + gold, IBM Plex Sans Arabic, same top bar and icon buttons.
+   Loaded after all of hifz.html's own <style> blocks (build-www.mjs puts it right before </head>), so equal
+   selectors here win. Only colours/fonts/chrome change — content, tajweed colours and red/green grading stay.
+============================================================ */
+:root{
+  --paper:#f6f3ec; --surface:#fffdf8; --surface-2:#faf6ec; --ink:#24211c; --ink-2:#5d564a; --line:#e4dccb; --rule:#efeadf;
+  --accent:#0f6b4f; --accent-ink:#ffffff; --accent-soft:#e3f0e9; --accent-2:#a67c2e;
+  --red:#b3372b; --red-soft:#fae6e1; --green:#11743f; --green-soft:#e1f1e6; --amber:#a67c2e; --amber-soft:#f5ead2;
+  --shadow-1:0 1px 2px rgba(40,30,10,.06); --shadow-2:0 1px 2px rgba(40,30,10,.06),0 8px 24px rgba(40,30,10,.06);
+  --nav-bg:var(--surface); --page-bg:var(--surface); --toast-bg:var(--ink); --toast-ink:var(--paper);
+  --r-lg:16px; --r-md:12px;
+  --f-display:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;
+  --f-body:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;
+  --f-text:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#12161a; --surface:#181e23; --surface-2:#1d242a; --ink:#e7e3da; --ink-2:#b5ae9f; --line:#283139; --rule:#202830;
+  --accent:#4fc19a; --accent-ink:#0b1f18; --accent-soft:#183229; --accent-2:#d6b26a;
+  --red:#ff8c8c; --red-soft:#3a1f1f; --green:#73d39b; --green-soft:#17301f; --amber:#d6b26a; --amber-soft:#2e2818;
+  --shadow-1:0 1px 2px rgba(0,0,0,.3); --shadow-2:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  --nav-bg:#0e1215; --page-bg:var(--surface); --toast-bg:#1d242a; --toast-ink:#e7e3da;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#12161a; --surface:#181e23; --surface-2:#1d242a; --ink:#e7e3da; --ink-2:#b5ae9f; --line:#283139; --rule:#202830;
+  --accent:#4fc19a; --accent-ink:#0b1f18; --accent-soft:#183229; --accent-2:#d6b26a;
+  --red:#ff8c8c; --red-soft:#3a1f1f; --green:#73d39b; --green-soft:#17301f; --amber:#d6b26a; --amber-soft:#2e2818;
+  --shadow-1:0 1px 2px rgba(0,0,0,.3); --shadow-2:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  --nav-bg:#0e1215; --page-bg:var(--surface); --toast-bg:#1d242a; --toast-ink:#e7e3da;
+  color-scheme:dark }
+
+body{font-family:var(--f-body);-webkit-font-smoothing:antialiased}
+
+/* top bar = Tafsir's .top: frosted surface, 60px, hairline */
+.topbar{min-height:60px;padding-block:10px;background:color-mix(in srgb,var(--surface) 90%,transparent);border-bottom:1px solid var(--line)}
+.topbar .menu-btn{height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-weight:600}
+.topbar .cur-title{color:var(--ink);font-weight:600;font-size:16px}
+
+/* title + its group («القرآن ›») */
+.rq-title{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.rq-title small{color:var(--accent);font-size:11.5px;font-weight:600}
+.rq-title .cur-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* home button = Tafsir's .ibtn */
+.rafiq-home{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:11px;border:1px solid transparent;color:var(--ink-2);text-decoration:none;transition:.15s}
+.rafiq-home:hover,.rafiq-home:active{background:var(--surface-2);border-color:var(--line)}
+.rafiq-home svg{width:22px;height:22px}
+
+/* side index = Tafsir's side panel */
+nav.idx{border-inline-start:1px solid var(--line)}
+.nav-head b{font-weight:600}
+.idx a{border-radius:10px}
+.idx a.key,.idx a[aria-current="page"]{color:var(--accent)}
+
+/* collapsible groups in the menu (js/hifz-nav.js) */
+.rq-grp{margin:2px 0}
+.rq-grp summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600;color:var(--ink);user-select:none}
+.rq-grp summary::-webkit-details-marker{display:none}
+.rq-grp summary:hover{background:var(--surface-2)}
+.rq-grp summary svg{width:20px;height:20px;flex:none;color:var(--accent)}
+.rq-grp summary span{flex:1;min-width:0}
+.rq-grp summary i{font-style:normal;font-size:11.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:0 8px}
+/* physical borders so the chevron is the same in RTL: down = closed, up = open */
+.rq-grp summary::after{content:"";width:7px;height:7px;border-right:2px solid var(--ink-2);border-bottom:2px solid var(--ink-2);transform:translateY(-2px) rotate(45deg);transition:transform .15s;margin-inline-start:4px}
+.rq-grp[open] summary::after{transform:translateY(2px) rotate(-135deg)}
+.rq-grp[open] summary{color:var(--accent)}
+.rq-grp > a{display:flex;margin-inline-start:22px;padding-inline-start:16px;border-inline-start:2px solid var(--line);border-radius:0 10px 10px 0}
+.rq-grp > a[aria-current="page"]{border-inline-start-color:var(--accent)}
+
+/* «أقسام المرجع» on the Hifz home */
+.rq-sec{margin-top:22px}
+.rq-sec-h{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-size:1.1rem}
+.rq-sec-h svg{width:38px;height:38px;flex:none;padding:8px;border-radius:11px;background:var(--accent-soft);color:var(--accent)}
+.rq-sec-h small{display:block;font-size:.8rem;font-weight:400;color:var(--ink-2)}
+/* each group = one compact list (27 full cards were a very long scroll on a phone) */
+#rq-map .grid{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-1)}
+#rq-map .card{position:relative;border:0;border-radius:0;border-bottom:1px solid var(--rule);padding:12px 16px 12px 40px;gap:2px;box-shadow:none;transform:none;background:transparent}
+#rq-map .card:last-child{border-bottom:0}
+#rq-map .card:active{background:var(--surface-2)}
+#rq-map .card h3{margin:0;font-size:1rem;font-weight:600}
+#rq-map .card p{margin:0;font-size:.86rem;line-height:1.6}
+#rq-map .card .go{display:none}
+/* «‹» = go forward in RTL (left-pointing: physical left+bottom borders at 45°) */
+#rq-map .card::after{content:"";position:absolute;left:18px;top:50%;width:8px;height:8px;border-left:2px solid var(--ink-2);border-bottom:2px solid var(--ink-2);transform:translateY(-50%) rotate(45deg)}
+
+/* tajweed pages (js/hifz-tajweed.js) */
+.view h2.rq-first{display:none}                       /* the page's h1 already says it */
+.rq-rule{margin:22px 0 6px}
+.rq-rule h3{display:flex;align-items:center;gap:10px;margin:0 0 4px}
+.rq-rule h3 .pill{font-size:12px;font-weight:500}
+.rq-sw{width:14px;height:14px;border-radius:4px;background:var(--c);flex:none}
+.rq-exs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:10px 0}
+.rq-ex{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink);text-decoration:none;min-width:0}
+.rq-ex .q-txt{font-size:1.35rem;line-height:2;text-align:center}
+.rq-ex small{color:var(--ink-2);font-size:11.5px}
+.rq-ex:active{border-color:var(--accent)}
+/* colour only, like the coloured Mushaf (a background draws tall bars across the harakat) */
+.rq-on{color:var(--c)}
+.rq-trig{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:8px;text-decoration-color:var(--ink-2)}
+/* in the «حدد الحكم» quiz the rule colour would give the answer away: one neutral colour for every rule */
+.rq-quizq .rq-on{color:var(--accent)}
+.rq-quiz{margin:12px 0}
+.rq-qhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.rq-qhead h3{margin:0}
+.rq-qex{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px;margin:8px 0;border-radius:var(--r-md);background:var(--surface-2)}
+.rq-qex .q-txt{font-size:1.8rem;line-height:2.1}
+.rq-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+.rq-opt{max-width:none;white-space:normal}
+.rq-opt.ok{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.rq-opt.bad{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.rq-fb{margin-top:10px}
+.rq-score{font-size:1.6rem;font-weight:700;margin:6px 0}
+
+/* «السابق / التالي» at the bottom of each page */
+.rq-pager{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:32px 0 8px;padding-top:16px;border-top:1px solid var(--line)}
+.rq-pager a{display:flex;flex-direction:column;gap:2px;min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink);text-decoration:none}
+.rq-pager a.next{text-align:left;grid-column:2}
+.rq-pager small{color:var(--ink-2);font-size:12px}
+.rq-pager b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rq-pager a:active{border-color:var(--accent)}
+
+/* surfaces + buttons: same radius and shadow language as Tafsir */
+.sheet{border-radius:var(--r-lg);box-shadow:var(--shadow-2)}
+.card{border-radius:var(--r-lg)}
+.btn{border-radius:var(--r-md)}
+.btn.pri{box-shadow:none}
+.eyebrow{background:var(--accent-soft);color:var(--accent)}

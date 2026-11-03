@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<!-- minimum-scale=1: a page wider than the phone must never zoom the whole WebView out -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, minimum-scale=1">
+<meta name="theme-color" content="#1F3B34">
+<title>رفيق القرآن</title>
+<script src="js/shell.js" data-section="hub"></script>
+<script>/* apply the shared theme before first paint */(function(){const t=RafiqShell.getTheme();if(t!=="auto")document.documentElement.dataset.theme=t;})();</script>
+<link rel="stylesheet" href="css/rafiq-fonts.css">
+<style>
+  /* the shared design = the Tafsir section's tokens (light / sepia / dark) */
+  :root{--bg:#f6f3ec;--bg2:#efeadf;--surface:#fffdf8;--surface2:#faf6ec;--line:#e4dccb;--ink:#24211c;--ink2:#5d564a;--ink3:#7d7565;
+    --accent:#0f6b4f;--accent2:#0b5a42;--accentSoft:#e3f0e9;--gold:#a67c2e;--goldSoft:#f5ead2;
+    --shadow:0 1px 2px rgba(40,30,10,.06),0 8px 24px rgba(40,30,10,.06);
+    --hero1:#13805e;--hero2:#0a3f30;
+    --read:'Amiri','Traditional Arabic',serif;--ui:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;
+    /* safe area: Android WebView can report env() = 0 under the 3-button nav bar — Capacitor's SystemBars sets the
+       real values as --safe-area-inset-*; read those first */
+    --sat:var(--safe-area-inset-top,env(safe-area-inset-top,0px));--sab:var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px));
+    color-scheme:light}
+  :root[data-theme="sepia"]{--bg:#efe3c8;--bg2:#e8d9b8;--surface:#f8eed7;--surface2:#f3e6c8;--line:#dccaa0;--ink:#3b2f1c;--ink2:#5f4e33;--ink3:#7f6a47;--accentSoft:#e6e2c2;--goldSoft:#f0dfb5}
+  @media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#12161a;--bg2:#0e1215;--surface:#181e23;--surface2:#1d242a;--line:#283139;--ink:#e7e3da;--ink2:#b5ae9f;--ink3:#8d877c;
+    --accent:#4fc19a;--accent2:#6fd3ae;--accentSoft:#183229;--gold:#d6b26a;--goldSoft:#2e2818;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+    --hero1:#145c47;--hero2:#0b2a21;color-scheme:dark}}
+  :root[data-theme="dark"]{--bg:#12161a;--bg2:#0e1215;--surface:#181e23;--surface2:#1d242a;--line:#283139;--ink:#e7e3da;--ink2:#b5ae9f;--ink3:#8d877c;
+    --accent:#4fc19a;--accent2:#6fd3ae;--accentSoft:#183229;--gold:#d6b26a;--goldSoft:#2e2818;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+    --hero1:#145c47;--hero2:#0b2a21;color-scheme:dark}
+  *{box-sizing:border-box}html,body{margin:0}
+  body{font-family:var(--ui);background:var(--bg);color:var(--ink);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+  header{position:relative;background:linear-gradient(150deg,var(--hero1),var(--hero2));color:#fff;padding:calc(26px + var(--sat)) 20px 40px;border-radius:0 0 26px 26px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:52px;height:52px;border-radius:15px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 4px 14px rgba(0,0,0,.25)}
+  header h1{margin:0;font-size:25px;font-weight:600}
+  header p{margin:0;opacity:.78;font-size:14px}
+  header .ay{margin-top:18px;font-family:var(--read);font-size:19px;color:#f1ddb0;line-height:1.9}
+  .themebtn{position:absolute;top:calc(14px + var(--sat));left:14px;height:36px;padding:0 12px;border-radius:11px;border:1px solid rgba(255,255,255,.22);
+    background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer}
+  .themebtn svg{width:17px;height:17px}
+  main{padding:0 16px calc(28px + var(--sab));max-width:620px;margin:-20px auto 0;position:relative}
+  .sec{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;
+    color:inherit;text-decoration:none;box-shadow:var(--shadow);transition:transform .12s,border-color .15s}
+  .sec:active{transform:scale(.985);border-color:var(--accent)}
+  .sec>div{min-width:0;flex:1}
+  .ic{flex:none;width:52px;height:52px;border-radius:13px;display:grid;place-items:center}
+  .ic svg{width:28px;height:28px}
+  .t1 .ic{background:var(--accentSoft);color:var(--accent)}.t2 .ic{background:var(--goldSoft);color:var(--gold)}
+  .sec h2{margin:0;font-size:19px;font-weight:600}
+  .sec .sub{margin:1px 0 8px;color:var(--ink3);font-size:13.5px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tags span{font-size:12px;padding:1px 10px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);color:var(--ink2)}
+  .go{flex:none;align-self:center;color:var(--ink3);font-size:22px}
+  .cont{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-inline-start:4px solid var(--gold);color:var(--ink);
+    border-radius:14px;padding:12px 16px;margin-bottom:12px;text-decoration:none;box-shadow:var(--shadow)}
+  .cont b{flex:1;min-width:0;font-weight:600}.cont .k{color:var(--accent);font-weight:600}
+  .cont[hidden]{display:none}
+  footer{color:var(--ink3);font-size:12.5px;text-align:center;padding:6px 10px}
+  /* settings (reminder, keep screen on) */
+  .sets{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin:4px 0 14px;box-shadow:var(--shadow)}
+  .sets h3{margin:0;padding:14px 16px 4px;font-size:15px;font-weight:600;color:var(--ink2)}
+  .set{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line)}
+  .sets h3+.set{border-top:0}
+  .set>span{flex:1;min-width:0}.set b{display:block;font-weight:600;font-size:15px}.set small{display:block;color:var(--ink3);font-size:12.5px}
+  .set[hidden]{display:none}
+  .sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s;margin:0}
+  .sw::after{content:"";position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:right .15s}
+  .sw:checked{background:var(--accent)}.sw:checked::after{right:21px}
+  .set input[type=time]{font:inherit;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+  .note{color:#b3372b;font-size:12.5px;padding:0 16px 12px}.note[hidden]{display:none}
+  .note button{font:inherit;color:var(--accent);background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
+  .sets[hidden]{display:none}
+  .acct-btns{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 14px}
+  .acct-btns .btn{flex:1 1 140px}
+  #acctTxt{font-size:14px;color:var(--ink2);line-height:1.8}#acctTxt b{color:var(--ink)}
+  .acct-err{color:#b3372b}
+  /* web version: phone-only settings (reminders, keep screen on) are hidden */
+  html:not(.is-native) .native-only{display:none}
+  /* in-app confirm (WebView confirm() is grey with English OK/CANCEL). Never focus() a button in it: a focused
+     element let the Android WebView take the Back key and close the app. */
+  .dlg{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(10,14,12,.55)}
+  .dlg.hidden{display:none}
+  .dlg-card{width:100%;max-width:360px;background:var(--surface);border-radius:22px;padding:22px 20px 16px;text-align:center}
+  .dlg-card p{color:var(--ink3);margin:0 0 16px}.dlg-btns{display:flex;gap:10px}
+  .btn{flex:1;font:inherit;border:0;border-radius:12px;padding:11px 18px;background:var(--accent);color:#fff;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <button class="themebtn" id="themeBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><span id="themeTxt"></span></button>
+  <div class="brand">
+    <img class="logo" src="icons/icon-192.png" alt="" width="52" height="52">
+    <span><h1>رفيق القرآن</h1><p>تفسير ميسّر، وحفظ وتسميع، في مكان واحد</p></span>
+  </div>
+  <div class="ay">﴿وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ﴾</div>
+</header>
+<main>
+  <a class="cont" id="cont" hidden href="#"><b id="contTxt"></b><span class="k">كمّل ‹</span></a>
+
+  <a class="sec t1" href="tafsir.html" id="goTafsir">
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5Z"/><path d="M12 6.5v13"/></svg></span>
+    <div>
+      <h2>التفسير</h2>
+      <p class="sub">أسهل تفسير لكلام اللطيف الخبير — رامي حنفي محمود</p>
+      <div class="tags"><span>١١٤ سورة</span><span>بحث سريع</span><span>اختبارات</span><span>فهارس</span><span>علامات وملاحظات</span></div>
+    </div>
+    <span class="go">‹</span>
+  </a>
+
+  <a class="sec t2" href="hifz.html" id="goHifz">
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 0-4 4v1a4 4 0 0 0-3 6.5A4 4 0 0 0 8 21h1V3.5"/><path d="M12 3a4 4 0 0 1 4 4v1a4 4 0 0 1 3 6.5A4 4 0 0 1 16 21h-1V3.5"/><path d="M12 3v18"/></svg></span>
+    <div>
+      <h2>الحفظ والتسميع</h2>
+      <p class="sub">مرجع الحفظ والتسميع — طريقة وخطة وتسميع</p>
+      <div class="tags"><span>المصحف بالتجويد</span><span>اختبارات التسميع</span><span>بنك أسئلة التجويد</span><span>كتب الذاكرة</span></div>
+    </div>
+    <span class="go">‹</span>
+  </a>
+
+  <section class="sets" id="acct" aria-label="حسابك على جوجل" hidden>
+    <h3>☁️ حسابك على جوجل</h3>
+    <div class="set"><span id="acctTxt"></span></div>
+    <div class="acct-btns" id="acctBtns"></div>
+  </section>
+
+  <section class="sets" aria-label="الإعدادات">
+    <h3>الإعدادات</h3>
+    <label class="set native-only"><span><b>تذكير يومي بالمراجعة</b><small>إشعار كل يوم بعدد مراجعات الحفظ اللي عليها الدور</small></span><input type="checkbox" class="sw" id="remOn"></label>
+    <label class="set" id="remTimeRow" hidden><span><b>ميعاد التذكير</b><small>ممكن يتأخر دقايق قليلة عشان البطارية</small></span><input type="time" id="remTime" value="20:00"></label>
+    <div class="note" id="remNote" hidden>الإشعارات مقفولة للتطبيق. <button type="button" id="remSettings">افتح إعدادات الإشعارات</button></div>
+    <label class="set native-only"><span><b>الشاشة تفضل منورة</b><small>وإنت بتقرا التفسير أو بتسمّع</small></span><input type="checkbox" class="sw" id="screenOn"></label>
+  </section>
+
+  <footer>كل قسم شغال من غير نت، وبياناتك (العلامات والملاحظات والتقدّم) محفوظة على الموبايل.</footer>
+</main>
+
+<div class="dlg hidden" id="dlg" role="dialog" aria-modal="true">
+  <div class="dlg-card"><div id="dlgIc" style="font-size:28px"></div><h3 id="dlgTitle" style="margin:6px 0"></h3><p id="dlgBody"></p>
+    <div class="dlg-btns"><button class="btn ghost" id="dlgNo"></button><button class="btn" id="dlgOk"></button></div></div>
+</div>
+
+<script>
+/* ===== «كمّل» = the section + page opened last ===== */
+(function(){
+  let last=null;try{last=JSON.parse(localStorage.getItem("rafiq:last")||"null");}catch(e){}
+  const NAMES={tafsir:"التفسير",hifz:"الحفظ والتسميع"};
+  if(last&&NAMES[last.sec]&&/^(#[^<>"']*)?$/.test(last.hash||"")){
+    const a=document.getElementById("cont");
+    a.href=last.sec+".html"+(last.hash||"");
+    document.getElementById("contTxt").textContent="آخر مكان: "+NAMES[last.sec];
+    a.hidden=false;
+  }
+})();
+
+/* ===== shared theme (same setting as the sections' own theme buttons) ===== */
+(function(){
+  const TXT={auto:"تلقائي",light:"فاتح",sepia:"ورقي",dark:"غامق"};
+  const btn=document.getElementById("themeBtn"),txt=document.getElementById("themeTxt");
+  const show=t=>{txt.textContent=TXT[t];if(t==="auto")delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;};
+  show(RafiqShell.getTheme());
+  btn.onclick=()=>{const L=RafiqShell.THEMES,t=L[(L.indexOf(RafiqShell.getTheme())+1)%L.length];RafiqShell.setTheme(t);show(t);};
+})();
+
+/* ===== in-app confirm → Promise<boolean>; Back closes it (= no) ===== */
+let dlgResolve=null;
+function mzConfirm(o){const el=document.getElementById("dlg");if(dlgResolve)closeDialog(false);
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  document.getElementById("dlgIc").textContent=o.icon||"❓";document.getElementById("dlgTitle").textContent=o.title||"";
+  document.getElementById("dlgBody").textContent=o.body||"";document.getElementById("dlgOk").textContent=o.ok||"تمام";
+  document.getElementById("dlgNo").textContent=o.cancel||"إلغاء";el.classList.remove("hidden");
+  return new Promise(r=>{dlgResolve=r;});}
+function closeDialog(v){document.getElementById("dlg").classList.add("hidden");const r=dlgResolve;dlgResolve=null;if(r)r(v);}
+document.getElementById("dlgOk").onclick=()=>closeDialog(true);
+document.getElementById("dlgNo").onclick=()=>closeDialog(false);
+
+/* ===== Back: close the dialog; false on the hub → native.js asks «تقفل التطبيق؟» ===== */
+function goBack(){if(dlgResolve){closeDialog(false);return true;}return false;}
+
+/* ===== settings: daily review reminder + keep the screen on in the sections ===== */
+(function(){
+  const S=RafiqShell,on=document.getElementById("remOn"),time=document.getElementById("remTime"),
+        row=document.getElementById("remTimeRow"),note=document.getElementById("remNote"),scr=document.getElementById("screenOn");
+  const r=S.load("remind",{on:false,time:"20:00"});
+  on.checked=!!r.on;time.value=r.time||"20:00";row.hidden=!r.on;scr.checked=S.load("screen",true);
+  // saving rafiq:remind makes native.js re-plan; turning it on is the only place the notification permission is asked
+  async function apply(){
+    const v={on:on.checked,time:time.value||"20:00"};row.hidden=!v.on;note.hidden=true;
+    if(v.on&&window.MZNative&&S.isNative){
+      const ok=await MZNative.ensurePermission();
+      if(!ok){on.checked=false;v.on=false;row.hidden=true;note.hidden=false;}
+    }
+    S.save("remind",v);
+    if(window.MZNative)MZNative.rescheduleAll();
+  }
+  on.onchange=apply;time.onchange=apply;
+  document.getElementById("remSettings").onclick=()=>window.MZNative&&MZNative.openNotificationSettings();
+  scr.onchange=()=>S.save("screen",scr.checked);
+})();
+
+/* ===== ☁️ account card (js/cloud.js): same data on the phone and on the web ===== */
+function acctUI(){
+  const C=window.RafiqCloud,box=document.getElementById("acct");if(!C||!C.available)return;box.hidden=false;
+  const i=C.info(),esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const ago=t=>{if(!t)return "لسه";const m=Math.round((Date.now()-t)/60000);return m<1?"دلوقتي":m<60?"من "+m+" دقيقة":m<1440?"من "+Math.round(m/60)+" ساعة":new Date(t).toLocaleDateString("ar-EG");};
+  const txt=document.getElementById("acctTxt"),btns=document.getElementById("acctBtns");
+  if(!i.signedIn){
+    txt.innerHTML=i.state==="signing-in"?"بيفتح جوجل…":`سجّل دخول بحساب جوجل عشان علاماتك وملاحظاتك وتقدّمك في الحفظ يبقوا نفس الحاجة على الموبايل وعلى الكمبيوتر، ومحفوظين في Google Drive بتاعك.${i.state==="error"?`<br><span class="acct-err">⚠️ ${esc(acctErr(i.error))}</span>`:""}`;
+    btns.innerHTML=`<button class="btn" data-a="in">سجّل دخول بجوجل</button>`;
+  }else{
+    txt.innerHTML=`الحساب: <b>${esc(i.email)}</b><br>آخر مزامنة: ${i.state==="syncing"?"بيزامن دلوقتي…":esc(ago(i.lastSync))}${i.state==="error"?`<br><span class="acct-err">⚠️ ${esc(acctErr(i.error))}</span>`:""}`;
+    btns.innerHTML=`<button class="btn" data-a="sync">زامن دلوقتي</button><button class="btn ghost" data-a="out">خروج</button>`;
+  }
+}
+function acctErr(e){const C=window.RafiqCloud;return /needs-consent/.test(e)?(C&&C.web?"إذن جوجل بيخلص كل ساعة على المتصفح — اضغط «زامن دلوقتي»":"محتاج تسمح للتطبيق تاني — اضغط «زامن دلوقتي»"):
+  /account-mismatch/.test(e)?"الحساب اتغيّر — اعمل خروج ودخول تاني":/Failed to fetch|NetworkError|network/i.test(e)?"مفيش نت — هيزامن لوحده لما النت يرجع":
+  /403/.test(e)?"Google Drive مش متفعّل (إعداد Google Cloud)":/10:|DEVELOPER_ERROR|authorize-failed/.test(e)?"تسجيل الدخول مش متجهّز لنسخة التطبيق دي (إعداد Google Cloud)":e;}
+document.getElementById("acctBtns").onclick=async e=>{
+  const a=e.target.closest("[data-a]"),C=window.RafiqCloud;if(!a||!C)return;
+  if(a.dataset.a==="in")await C.signIn();
+  else if(a.dataset.a==="sync"){const i=C.info();if(i.state==="error"&&/needs-consent/.test(i.error))await C.reauth();else await C.sync();}
+  else if(a.dataset.a==="out"&&await mzConfirm({icon:"☁️",title:"تخرج من حساب جوجل؟",body:"بياناتك هتفضل على الجهاز ده وفي Google Drive.",ok:"اخرج",cancel:"لأ"}))C.signOut();
+  acctUI();};
+
+/* ===== bridge for js/native.js: the reminder list is built in js/shell.js (same on every page) ===== */
+window.MZApp={back:goBack,confirm:mzConfirm,alerts:RafiqShell.alerts};
+</script>
+<script src="js/web-config.js"></script>
+<script src="js/cloud.js" data-section="hub"></script>
+<script>if(window.RafiqCloud){RafiqCloud.onChange(acctUI);acctUI();}</script>
+<script src="js/native.js"></script>
+</body>
+</html>
