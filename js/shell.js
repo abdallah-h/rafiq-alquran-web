@@ -87,6 +87,11 @@
     window.SpeechRecognition = window.webkitSpeechRecognition = NativeSpeechRecognition;
   }
 
+  /* ---------- web version: installable + offline (sw.js keeps a copy of every page) ---------- */
+  if (!isNative && "serviceWorker" in navigator && location.protocol === "https:") {
+    addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+
   /* ---------- keep the screen on while reading / reciting (setting on the hub; default on) ---------- */
   if (isNative && P("Screen")) P("Screen").keepOn({ on: SEC !== "hub" && load("screen", true) }).catch(() => {});
 
@@ -176,11 +181,17 @@
      Any write to a tafsir:* / hifz:* key = that section changed now (rafiq:t:<section>) → sync soon. Writes made by
      the sync itself (applying Drive's copy) run with quiet(true) and are not changes. */
   let quiet = false;
+  // also per key (rafiq:kt:<section> = {key: time of last write or delete}) so the sync can merge item by item
   function stamp(k) {
     if (quiet) return;
     const g = /^(tafsir|hifz):/.exec(k);
     if (!g) return;
-    rawSet("rafiq:t:" + g[1], String(Date.now()));
+    const now = Date.now();
+    rawSet("rafiq:t:" + g[1], String(now));
+    let kt = {};
+    try { kt = JSON.parse(localStorage.getItem("rafiq:kt:" + g[1])) || {}; } catch (e) {}
+    kt[k] = now;
+    rawSet("rafiq:kt:" + g[1], JSON.stringify(kt));
     if (window.RafiqCloud) window.RafiqCloud.changed();
   }
   try {

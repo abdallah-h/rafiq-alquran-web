@@ -4,10 +4,13 @@
    account's Drive — it can't see any other file. Everything is in one visible folder, FOLDER (drive.google.com):
      التفسير — بيانات.json            every tafsir:* key (bookmarks, notes, reading place, quiz scores…)
      الحفظ والتسميع — بيانات.json      every hifz:* key (review schedule, khatma progress, tests, streak…)
-   Each file: { app, pid, t, keys: { key: value } } + appProperties { app, kind: "data", pid, t }; t = last change.
+   Each file: { app, pid, t, keys: { key: value }, kt: { key: time } } + appProperties { app, kind: "data", pid, t }.
 
-   Per section the newer copy wins: this device newer → upload; Drive newer → replace this device's keys of that section
-   (and reload the page if that section is open, so it shows them). shell.js stamps rafiq:t:<section> on every write.
+   Merged ITEM BY ITEM: shell.js records when each key was last written or deleted (rafiq:kt:<section>); on sync each
+   key takes the side that changed it last, deletions included — a note written on the computer and a review done on
+   the phone before either synced both survive. (One key edited on both sides: the later edit wins.) The merged result
+   goes to this device (the open section reloads to show it) and to Drive. A device's FIRST sync with an account counts
+   its own times as 0, so Drive's copy wins every key it has (a fresh browser's sample data must not win).
    Phone: Play Services token (GoogleDriveAuthPlugin), renewed silently. Web: Google Identity Services token client with
    the Web client of the SAME Google Cloud project (drive.file access belongs to the project, so both see the same
    files); a browser token lasts an hour, then «احفظ دلوقتي» asks again with one click.
@@ -53,7 +56,8 @@
   // synced[pid]: this device has exchanged that section with this account at least once. Until then Drive WINS if it
   // has the section — a fresh device (the web version opened for the first time) has Hifz's sample data written "just
   // now", which would otherwise look newer than the real data and overwrite it.
-  function blank() { return { account: null, token: null, folder: null, lastSync: 0, synced: {} }; }
+  // seen[pid] = Drive file's t when we last merged it; pushed[pid] = local section stamp already merged/sent
+  function blank() { return { account: null, token: null, folder: null, lastSync: 0, synced: {}, seen: {}, pushed: {} }; }
   function load() { try { return Object.assign(blank(), JSON.parse(ls.getItem(KEY) || "{}")); } catch (e) { return blank(); } }
   var st = load();
   function save() { try { ls.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
@@ -64,20 +68,57 @@
     for (var i = 0; i < ls.length; i++) { var k = ls.key(i); if (k && k.indexOf(pid + ":") === 0) keys[k] = ls.getItem(k); }
     return { keys: keys, t: +ls.getItem("rafiq:t:" + pid) || 0 };
   }
-  function applyData(pid, keys, t) {
+  function localTimes(pid) { try { return JSON.parse(ls.getItem("rafiq:kt:" + pid)) || {}; } catch (e) { return {}; } }
+  /* write the merged keys onto this device (quietly: not local changes) */
+  function applyData(pid, keys, kt) {
     var S = window.RafiqShell;
-    if (S && S.quiet) S.quiet(true);   // these writes are not local changes
+    if (S && S.quiet) S.quiet(true);
     try {
       var drop = [];
       for (var i = 0; i < ls.length; i++) { var k = ls.key(i); if (k && k.indexOf(pid + ":") === 0 && !(k in keys)) drop.push(k); }
       drop.forEach(function (k) { ls.removeItem(k); });
-      Object.keys(keys).forEach(function (k) { if (k.indexOf(pid + ":") === 0) ls.setItem(k, keys[k]); });
-      ls.setItem("rafiq:t:" + pid, String(t));
+      Object.keys(keys).forEach(function (k) { if (k.indexOf(pid + ":") === 0 && ls.getItem(k) !== keys[k]) ls.setItem(k, keys[k]); });
+      ls.setItem("rafiq:kt:" + pid, JSON.stringify(kt));
     } finally { if (S && S.quiet) S.quiet(false); }
+  }
+  /* item-by-item merge. mine/theirs = {keys, kt}; a key's time = its last write OR delete. Equal times → keep the value
+     that exists (a key only one side has is kept). → { keys, kt, localChanged, remoteChanged } */
+  function merge(mine, theirs) {
+    var all = {}, keys = {}, kt = {}, localChanged = false, remoteChanged = false;
+    [mine.keys, mine.kt, theirs.keys, theirs.kt].forEach(function (o) { Object.keys(o).forEach(function (k) { all[k] = 1; }); });
+    Object.keys(all).forEach(function (k) {
+      var lt = mine.kt[k] || 0, rt = theirs.kt[k] || 0;
+      var inL = k in mine.keys, inR = k in theirs.keys;
+      var useR = rt > lt || (rt === lt && inR && !inL) || (rt === lt && inR && inL);
+      var v = useR ? (inR ? theirs.keys[k] : undefined) : (inL ? mine.keys[k] : undefined);
+      if (v !== undefined) keys[k] = v;
+      kt[k] = Math.max(lt, rt);
+      if ((inL ? mine.keys[k] : undefined) !== v) localChanged = true;
+      if ((inR ? theirs.keys[k] : undefined) !== v || (theirs.kt[k] || 0) !== kt[k]) remoteChanged = true;
+    });
+    return { keys: keys, kt: kt, localChanged: localChanged, remoteChanged: remoteChanged };
   }
 
   var listeners = [], state = "idle", error = "", reloadAfter = false;
-  function setState(s, e) { state = s; error = e || ""; listeners.forEach(function (fn) { try { fn(api.info()); } catch (x) {} }); }
+  function setState(s, e) { state = s; error = e || ""; listeners.forEach(function (fn) { try { fn(api.info()); } catch (x) {} }); bar(); }
+
+  /* Web: Google's permission lasts an hour and only a click can renew it (a popup needs a user gesture). On the sections
+     (the hub has its own card) a small bar says so, instead of syncing silently stopping. */
+  function bar() {
+    if (native || PAGE === "hub" || !document.body) return;
+    var b = document.getElementById("rq-cloudbar");
+    var need = !!st.account && state === "error" && /needs-consent/.test(error);
+    if (!need) { if (b) b.remove(); return; }
+    if (b) return;
+    b = document.createElement("button");
+    b.id = "rq-cloudbar"; b.type = "button";
+    b.textContent = "☁️ إذن جوجل خلص — اضغط عشان تكمّل المزامنة";
+    b.style.cssText = "position:fixed;z-index:9999;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));" +
+      "border:0;border-radius:999px;padding:10px 18px;font:inherit;font-size:14px;cursor:pointer;color:#fff;background:#0f6b4f;" +
+      "box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100% - 32px)";
+    b.onclick = function () { b.disabled = true; api.reauth(); };
+    document.body.appendChild(b);
+  }
 
   // ── tokens + Drive requests ──
   async function token(interactive) {
@@ -141,18 +182,26 @@
     var by = {};
     (r.files || []).forEach(function (f) { var a = f.appProperties || {}; if (a.app === APP && a.kind === "data") by[a.pid] = f; });
     for (var pid in SECTIONS) {
-      var mine = localData(pid), rf = by[pid], rt = rf ? +rf.appProperties.t || 0 : -1, lt = mine.t;
+      var mine = localData(pid), rf = by[pid], rt = rf ? String(rf.appProperties.t || "") : "";
       var has = Object.keys(mine.keys).length > 0, first = !st.synced[pid];
-      if (rf && (rt > lt || first)) {                            // Drive is newer (or this device is new) → take it
-        var doc = await drive(API + "/files/" + rf.id + "?alt=media");
-        if (doc && doc.keys) { applyData(pid, doc.keys, rt); if (PAGE === pid) reloadAfter = true; }
-      } else if (has && (!rf || lt > rt)) {                      // this device is newer → upload
-        if (!lt) { lt = Date.now(); ls.setItem("rafiq:t:" + pid, String(lt)); }   // data from before sync existed
-        var meta = { name: SECTIONS[pid] + " — بيانات.json", appProperties: { app: APP, kind: "data", pid: pid, t: String(lt) } };
+      var remoteNew = !!rf && rt !== String(st.seen[pid] || ""), localNew = mine.t > (st.pushed[pid] || 0);
+      if (!rf && !has) continue;
+      if (rf && !remoteNew && !localNew && !first) continue;          // nothing changed on either side
+      var doc = rf ? await drive(API + "/files/" + rf.id + "?alt=media") : null;
+      var theirs = { keys: (doc && doc.keys) || {}, kt: (doc && doc.kt) || {} };
+      if (doc && !doc.kt) Object.keys(theirs.keys).forEach(function (k) { theirs.kt[k] = +doc.t || 1; });  // file from before item times
+      var mineT = first ? {} : localTimes(pid);                       // first sync: Drive wins every key it has
+      var m = merge({ keys: mine.keys, kt: mineT }, theirs);
+      if (m.localChanged) { applyData(pid, m.keys, m.kt); if (PAGE === pid) reloadAfter = true; }
+      else ls.setItem("rafiq:kt:" + pid, JSON.stringify(m.kt));
+      var newT = rt;
+      if (m.remoteChanged || !rf) {
+        newT = String(Date.now());
+        var meta = { name: SECTIONS[pid] + " — بيانات.json", appProperties: { app: APP, kind: "data", pid: pid, t: newT } };
         if (!rf) meta.parents = [fid];
-        await upload(rf && rf.id, meta, JSON.stringify({ app: APP, pid: pid, t: lt, keys: mine.keys }));
+        await upload(rf && rf.id, meta, JSON.stringify({ app: APP, pid: pid, t: +newT, keys: m.keys, kt: m.kt }));
       }
-      if (rf || has) st.synced[pid] = 1;
+      st.seen[pid] = newT; st.pushed[pid] = +ls.getItem("rafiq:t:" + pid) || 0; st.synced[pid] = 1;
     }
     st.lastSync = Date.now(); save();
     setState("ok");
@@ -187,7 +236,7 @@
         if (!who.user || !who.user.emailAddress) throw new Error("no-account");
         st.account = { email: who.user.emailAddress, name: who.user.displayName || "" };
         st.token = { email: st.account.email, token: res.accessToken, exp: Date.now() + (res.expiresIn || 3500) * 1000 };
-        st.synced = {}; save();
+        st.synced = {}; st.seen = {}; st.pushed = {}; save();
         await sync();
         return true;
       } catch (e) { setState("error", String(e && e.message || e)); return false; }
